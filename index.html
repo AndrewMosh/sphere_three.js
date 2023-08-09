@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Sphere</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+      let scene,
+        camera,
+        renderer,
+        sphere,
+        person,
+        isMouseDown = false;
+
+      function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Создаем сферу
+        const sphereGeometry = new THREE.SphereGeometry(5, 32, 32);
+        const sphereMaterial = new THREE.MeshBasicMaterial({
+          color: 0x00aaff,
+          wireframe: true,
+        });
+        sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        scene.add(sphere);
+
+        // Добавляем фигурку человека
+        person = new THREE.Object3D();
+
+        const headGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+        const headMaterial = new THREE.MeshBasicMaterial({
+          color: "grey",
+        });
+        const head = new THREE.Mesh(headGeometry, headMaterial);
+        head.position.set(0, 1.5, 0);
+        person.add(head);
+
+        const bodyGeometry = new THREE.BoxGeometry(0.8, 1, 0.4);
+        const bodyMaterial = new THREE.MeshBasicMaterial({
+          color: "grey",
+        });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.position.set(0, 0.8, 0);
+        person.add(body);
+
+        const limbGeometry = new THREE.BoxGeometry(0.2, 1, 0.2);
+        const limbMaterial = new THREE.MeshBasicMaterial({
+          color: "grey",
+        });
+
+        const leftArm = new THREE.Mesh(limbGeometry, limbMaterial);
+        leftArm.position.set(0.6, 1.2, 0);
+        person.add(leftArm);
+
+        const rightArm = new THREE.Mesh(limbGeometry, limbMaterial);
+        rightArm.position.set(-0.6, 1.2, 0);
+        person.add(rightArm);
+
+        const leftLeg = new THREE.Mesh(limbGeometry, limbMaterial);
+        leftLeg.position.set(0.3, 0.2, 0);
+        person.add(leftLeg);
+
+        const rightLeg = new THREE.Mesh(limbGeometry, limbMaterial);
+        rightLeg.position.set(-0.3, 0.2, 0);
+        person.add(rightLeg);
+
+        person.position.set(0, 0, 0); // Начальная позиция внутри сферы
+        scene.add(person); // Добавляем фигурку внутрь сферы
+
+        camera.position.z = 10;
+
+        // Добавляем обработчики событий мыши для вращения и масштабирования
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mousedown", onMouseDown);
+        document.addEventListener("mouseup", onMouseUp);
+        document.addEventListener("wheel", onMouseWheel);
+
+        // Добавляем обработчик события изменения размера окна
+        window.addEventListener("resize", onWindowResize);
+
+        animate();
+      }
+
+      function onMouseMove(event) {
+        // Вращение сферы по движению мыши, только при нажатой кнопке
+        if (isMouseDown) {
+          const rotationSpeed = 0.002;
+          sphere.rotation.y +=
+            (event.movementX ||
+              event.mozMovementX ||
+              event.webkitMovementX ||
+              0) * rotationSpeed;
+          sphere.rotation.x +=
+            (event.movementY ||
+              event.mozMovementY ||
+              event.webkitMovementY ||
+              0) * rotationSpeed;
+        }
+      }
+
+      function onMouseDown() {
+        isMouseDown = true;
+      }
+
+      function onMouseUp() {
+        isMouseDown = false;
+      }
+
+      function onMouseWheel(event) {
+        // Масштабирование сцены при прокрутке колесика мыши
+        const scaleSpeed = 0.1;
+        camera.position.z -= event.deltaY * scaleSpeed;
+      }
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        // Обновляем позицию фигурки внутри сферы в соответствии с вращением сферы
+        const radius = 5;
+        const personPosition = new THREE.Vector3(0, 0, -radius); // Позиция внутри сферы
+
+        personPosition.applyMatrix4(sphere.matrixWorld); // Преобразование в глобальные координаты
+
+        person.position.copy(personPosition);
+
+        renderer.render(scene, camera);
+      }
+
+      init();
+    </script>
+  </body>
+</html>
